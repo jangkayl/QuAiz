@@ -14,6 +14,9 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
 	title: "Quiz Generator",
+	icons: {
+		icon: "/QuAiz.png",
+	},
 	description: "Generate multiple-choice quizzes on any topic.",
 };
 
@@ -24,6 +27,18 @@ export default function RootLayout({
 }) {
 	return (
 		<html lang="en">
+			<head>
+				<link
+					rel="icon"
+					href="/QuAiz.png"
+				/>
+				<link
+					rel="icon"
+					type="image/png"
+					sizes="32x32"
+					href="/QuAiz.png"
+				/>
+			</head>
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
 				{children}
