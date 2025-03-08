@@ -3,14 +3,25 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 
+interface QuizOption {
+	letter: string;
+	text: string;
+}
+
+interface QuizData {
+	question: string;
+	options: QuizOption[];
+	correctAnswer: string;
+}
+
 export default function QuAizGenerator() {
-	const [topic, setTopic] = useState("");
-	const [quiz, setQuiz] = useState(null);
-	const [loading, setLoading] = useState(false);
-	const [selectedAnswer, setSelectedAnswer] = useState(null);
-	const [feedback, setFeedback] = useState("");
-	const [showNext, setShowNext] = useState(false);
-	const quizRef = useRef(null);
+	const [topic, setTopic] = useState<string>("");
+	const [quiz, setQuiz] = useState<QuizData | null>(null);
+	const [loading, setLoading] = useState<boolean>(false);
+	const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+	const [feedback, setFeedback] = useState<string>("");
+	const [showNext, setShowNext] = useState<boolean>(false);
+	const quizRef = useRef<HTMLDivElement | null>(null);
 
 	const generateQuiz = async () => {
 		setLoading(true);
@@ -29,24 +40,24 @@ export default function QuAizGenerator() {
 			const data = await response.json();
 
 			if (response.ok) {
-				const lines = data.quiz
+				const lines: string[] = data.quiz
 					.split("\n")
-					.map((line) => line.trim())
-					.filter((line) => line !== "");
+					.map((line: string) => line.trim())
+					.filter((line: string) => line !== "");
 
 				const question = lines[1];
-				const options = lines
+				const options: QuizOption[] = lines
 					.slice(2, 7)
 					.map((line) => {
 						const match = line.match(/^([A-D])\)\s(.+)$/);
 						return match ? { letter: match[1], text: match[2] } : null;
 					})
-					.filter(Boolean);
+					.filter((option): option is QuizOption => option !== null);
 
 				let correctAnswer = "";
 				for (let i = 0; i < lines.length; i++) {
 					if (lines[i] === "**Correct Answer:**") {
-						correctAnswer = lines[i + 1]?.trim();
+						correctAnswer = lines[i + 1]?.trim() || "";
 						break;
 					}
 				}
@@ -67,19 +78,14 @@ export default function QuAizGenerator() {
 	};
 
 	const handleSubmit = () => {
-		if (!selectedAnswer) return;
+		if (!selectedAnswer || !quiz) return;
 
 		const correctLetter = quiz.correctAnswer.charAt(0);
 
 		setFeedback(
-			selectedAnswer === correctLetter ? (
-				"✅ Correct!"
-			) : (
-				<>
-					❌ Incorrect. <br />
-					The correct answer was <strong>{quiz.correctAnswer}</strong>
-				</>
-			)
+			selectedAnswer === correctLetter
+				? "✅ Correct!"
+				: `❌ Incorrect. \nThe correct answer was ${quiz.correctAnswer}`
 		);
 
 		setShowNext(true);
@@ -140,16 +146,14 @@ export default function QuAizGenerator() {
 
 					<button
 						onClick={handleSubmit}
-						disabled={!selectedAnswer || feedback}
-						className={`mt-4 w-full py-2 rounded-md text-lg transition ${
-							!selectedAnswer || feedback
-								? "bg-gray-500 cursor-not-allowed"
-								: "bg-green-500 text-white hover:bg-green-600"
-						}`}>
+						disabled={!selectedAnswer || feedback !== ""}
+						className="mt-4 w-full py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition">
 						Submit
 					</button>
 
-					{feedback && <p className="mt-4 text-lg">{feedback}</p>}
+					{feedback && (
+						<p className="mt-4 text-lg whitespace-pre-wrap">{feedback}</p>
+					)}
 
 					{showNext && (
 						<button
